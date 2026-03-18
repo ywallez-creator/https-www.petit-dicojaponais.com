@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>辞書 Jisho-FR — Dictionnaire Japonais</title>
+  <meta name="description" content="Dictionnaire japonais-français du N5 au N1, disponible hors ligne." />
+  <meta name="theme-color" content="#1a0a00" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;700&family=Shippori+Mincho:wght@400;700&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --ink: #1a0a00;
+      --paper: #f5efe6;
+      --paper2: #ede4d4;
+      --vermillion: #c0392b;
+      --gold: #b8860b;
+      --muted: #7a6a55;
+      --border: #d4c4a8;
+      --n5: #2ecc71;
+      --n4: #3498db;
+      --n3: #9b59b6;
+      --n2: #e67e22;
+      --n1: #c0392b;
+      --shadow: rgba(26,10,0,0.15);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Shippori Mincho', serif;
+      background: var(--paper);
+      color: var(--ink);
+      min-height: 100vh;
+      background-image:
+        repeating-linear-gradient(0deg, transparent, transparent 39px, var(--border) 39px, var(--border) 40px),
+        repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(212,196,168,0.3) 39px, rgba(212,196,168,0.3) 40px);
+      background-size: 40px 40px;
+    }
+
+    /* ── Header ── */
+    header {
+      background: var(--ink);
+      color: var(--paper);
+      padding: 0;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 20px var(--shadow);
+    }
+    .header-inner {
+      max-width: 960px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      padding: 0.75rem 1.5rem;
+    }
+    .logo {
+      display: flex;
+      flex-direction: column;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+    .logo-kanji {
+      font-family: 'Noto Serif JP', serif;
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--vermillion);
+      letter-spacing: -0.05em;
+    }
+    .logo-sub {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.6rem;
+      letter-spacing: 0.25em;
+      color: var(--paper2);
+      opacity: 0.7;
+      text-transform: uppercase;
+    }
+    .search-bar {
+      flex: 1;
+      position: relative;
+    }
+    .search-bar input {
+      width: 100%;
+      background: rgba(245,239,230,0.1);
+      border: 1px solid rgba(245,239,230,0.25);
+      border-radius: 4px;
+      padding: 0.6rem 1rem 0.6rem 2.8rem;
+      color: var(--paper);
+      font-family: 'Noto Serif JP', serif;
+      font-size: 1.05rem;
+      outline: none;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .search-bar input::placeholder { color: rgba(245,239,230,0.4); }
+    .search-bar input:focus {
+      border-color: var(--vermillion);
+      background: rgba(245,239,230,0.15);
+    }
+    .search-icon {
+      position: absolute;
+      left: 0.85rem;
+      top: 50%;
+      transform: translateY(-50%);
+      opacity: 0.5;
+      font-size: 1rem;
+    }
+    .offline-badge {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.65rem;
+      background: var(--vermillion);
+      color: white;
+      padding: 0.2rem 0.5rem;
+      border-radius: 2px;
+      letter-spacing: 0.1em;
+      flex-shrink: 0;
+      display: none;
+    }
+    .offline-badge.visible { display: block; }
+
+    /* ── Filters ── */
+    .filters {
+      background: var(--ink);
+      border-top: 1px solid rgba(245,239,230,0.1);
+    }
+    .filters-inner {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 0.5rem 1.5rem;
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .filter-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.65rem;
+      color: rgba(245,239,230,0.4);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      margin-right: 0.25rem;
+    }
+    .level-btn {
+      border: none;
+      border-radius: 3px;
+      padding: 0.25rem 0.7rem;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.75rem;
+      font-weight: 400;
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s;
+      letter-spacing: 0.05em;
+    }
+    .level-btn:hover { transform: translateY(-1px); }
+    .level-btn[data-level="all"] { background: var(--paper2); color: var(--ink); }
+    .level-btn[data-level="N5"] { background: var(--n5); color: #fff; }
+    .level-btn[data-level="N4"] { background: var(--n4); color: #fff; }
+    .level-btn[data-level="N3"] { background: var(--n3); color: #fff; }
+    .level-btn[data-level="N2"] { background: var(--n2); color: #fff; }
+    .level-btn[data-level="N1"] { background: var(--n1); color: #fff; }
+    .level-btn.inactive { opacity: 0.3; }
+
+    .cat-select {
+      background: rgba(245,239,230,0.1);
+      border: 1px solid rgba(245,239,230,0.2);
+      color: var(--paper);
+      font-family: 'DM Mono', monospace;
+      font-size: 0.75rem;
+      padding: 0.25rem 0.6rem;
+      border-radius: 3px;
+      outline: none;
+      cursor: pointer;
+    }
+    .cat-select option { background: var(--ink); }
+
+    /* ── Stats bar ── */
+    .stats-bar {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 0.6rem 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .stats-count {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+    .stats-count span { color: var(--vermillion); font-weight: 700; }
+    .view-toggle { display: flex; gap: 0.3rem; }
+    .view-btn {
+      background: none;
+      border: 1px solid var(--border);
+      padding: 0.2rem 0.5rem;
+      border-radius: 3px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      color: var(--muted);
+      transition: all 0.15s;
+    }
+    .view-btn.active { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+
+    /* ── Grid ── */
+    #word-grid {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 0 1.5rem 3rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 1rem;
+    }
+    #word-grid.list-view {
+      grid-template-columns: 1fr;
+    }
+
+    /* ── Card ── */
+    .word-card {
+      background: rgba(245,239,230,0.85);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 1.25rem;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
+      position: relative;
+      overflow: hidden;
+      backdrop-filter: blur(4px);
+    }
+    .word-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0;
+      width: 3px; height: 100%;
+    }
+    .word-card[data-level="N5"]::before { background: var(--n5); }
+    .word-card[data-level="N4"]::before { background: var(--n4); }
+    .word-card[data-level="N3"]::before { background: var(--n3); }
+    .word-card[data-level="N2"]::before { background: var(--n2); }
+    .word-card[data-level="N1"]::before { background: var(--n1); }
+    .word-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 24px var(--shadow);
+      background: #fff;
+    }
+    .card-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 0.5rem;
+    }
+    .card-kanji {
+      font-family: 'Noto Serif JP', serif;
+      font-size: 2rem;
+      font-weight: 700;
+      line-height: 1;
+      color: var(--ink);
+    }
+    .card-level-badge {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.6rem;
+      padding: 0.15rem 0.45rem;
+      border-radius: 2px;
+      color: white;
+      font-weight: 400;
+      letter-spacing: 0.05em;
+    }
+    .badge-N5 { background: var(--n5); }
+    .badge-N4 { background: var(--n4); }
+    .badge-N3 { background: var(--n3); }
+    .badge-N2 { background: var(--n2); }
+    .badge-N1 { background: var(--n1); }
+
+    .card-reading {
+      font-family: 'Noto Serif JP', serif;
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-bottom: 0.4rem;
+    }
+    .card-romaji {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--muted);
+      opacity: 0.7;
+      margin-bottom: 0.5rem;
+    }
+    .card-translation {
+      font-size: 0.95rem;
+      color: var(--ink);
+      line-height: 1.4;
+    }
+    .card-category {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.65rem;
+      color: var(--muted);
+      margin-top: 0.5rem;
+      opacity: 0.8;
+    }
+    .card-fav {
+      position: absolute;
+      bottom: 0.75rem;
+      right: 0.75rem;
+      background: none;
+      border: none;
+      font-size: 1rem;
+      cursor: pointer;
+      opacity: 0.3;
+      transition: opacity 0.2s, transform 0.15s;
+    }
+    .card-fav:hover { opacity: 0.8; transform: scale(1.2); }
+    .card-fav.active { opacity: 1; }
+
+    /* list view card */
+    #word-grid.list-view .word-card {
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+      padding: 0.8rem 1.25rem;
+    }
+    #word-grid.list-view .card-kanji { font-size: 1.5rem; min-width: 3rem; }
+    #word-grid.list-view .card-top { margin-bottom: 0; align-items: center; flex-direction: column; align-items: flex-start; gap: 0.15rem; min-width: 5rem; }
+    #word-grid.list-view .card-translation { flex: 1; }
+    #word-grid.list-view .card-category { margin-top: 0; }
+
+    /* ── Modal ── */
+    #modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(26,10,0,0.7);
+      z-index: 200;
+      backdrop-filter: blur(4px);
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+    }
+    #modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--paper);
+      border-radius: 8px;
+      padding: 2.5rem;
+      max-width: 520px;
+      width: 100%;
+      position: relative;
+      box-shadow: 0 24px 60px rgba(26,10,0,0.4);
+      animation: slideUp 0.25s ease;
+    }
+    @keyframes slideUp {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    .modal-close {
+      position: absolute;
+      top: 1rem; right: 1rem;
+      background: none; border: none;
+      font-size: 1.3rem; cursor: pointer;
+      color: var(--muted);
+      transition: color 0.15s;
+    }
+    .modal-close:hover { color: var(--vermillion); }
+    .modal-kanji {
+      font-family: 'Noto Serif JP', serif;
+      font-size: 4rem;
+      font-weight: 700;
+      color: var(--ink);
+      margin-bottom: 0.25rem;
+    }
+    .modal-reading {
+      font-family: 'Noto Serif JP', serif;
+      font-size: 1.2rem;
+      color: var(--muted);
+      margin-bottom: 0.2rem;
+    }
+    .modal-romaji {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.85rem;
+      color: var(--muted);
+      opacity: 0.7;
+      margin-bottom: 1.25rem;
+    }
+    .modal-divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 1rem 0;
+    }
+    .modal-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 0.3rem;
+    }
+    .modal-translation {
+      font-size: 1.15rem;
+      color: var(--ink);
+      margin-bottom: 1rem;
+      line-height: 1.5;
+    }
+    .modal-example {
+      background: var(--paper2);
+      border-left: 3px solid var(--vermillion);
+      padding: 0.75rem 1rem;
+      border-radius: 0 4px 4px 0;
+      margin-bottom: 0.5rem;
+    }
+    .modal-ex-jp {
+      font-family: 'Noto Serif JP', serif;
+      font-size: 1rem;
+      margin-bottom: 0.25rem;
+    }
+    .modal-ex-fr {
+      font-size: 0.88rem;
+      color: var(--muted);
+      font-style: italic;
+    }
+    .modal-meta {
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+      margin-top: 1rem;
+      flex-wrap: wrap;
+    }
+    .modal-badge {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.7rem;
+      padding: 0.2rem 0.6rem;
+      border-radius: 3px;
+      color: white;
+    }
+    .modal-cat-tag {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--muted);
+      background: var(--paper2);
+      padding: 0.2rem 0.6rem;
+      border-radius: 3px;
+    }
+    .modal-fav-btn {
+      margin-left: auto;
+      background: none;
+      border: 1px solid var(--border);
+      padding: 0.3rem 0.8rem;
+      border-radius: 3px;
+      cursor: pointer;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--muted);
+      transition: all 0.15s;
+    }
+    .modal-fav-btn:hover { border-color: var(--vermillion); color: var(--vermillion); }
+    .modal-fav-btn.active { background: var(--vermillion); color: white; border-color: var(--vermillion); }
+
+    /* ── Empty ── */
+    .empty-state {
+      grid-column: 1/-1;
+      text-align: center;
+      padding: 4rem 1rem;
+      color: var(--muted);
+    }
+    .empty-state .empty-kanji {
+      font-family: 'Noto Serif JP', serif;
+      font-size: 4rem;
+      opacity: 0.2;
+      display: block;
+      margin-bottom: 1rem;
+    }
+
+    /* ── Install banner ── */
+    #install-banner {
+      display: none;
+      position: fixed;
+      bottom: 1.5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--ink);
+      color: var(--paper);
+      padding: 0.9rem 1.5rem;
+      border-radius: 6px;
+      box-shadow: 0 8px 32px rgba(26,10,0,0.35);
+      z-index: 300;
+      display: none;
+      align-items: center;
+      gap: 1rem;
+      font-size: 0.88rem;
+      max-width: 420px;
+      width: 90%;
+    }
+    #install-banner.show { display: flex; }
+    #install-btn {
+      background: var(--vermillion);
+      border: none;
+      color: white;
+      padding: 0.45rem 1rem;
+      border-radius: 3px;
+      cursor: pointer;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.75rem;
+      white-space: nowrap;
+    }
+    #install-dismiss { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 1rem; }
+
+    /* scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--paper2); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    @media (max-width: 600px) {
+      .header-inner { padding: 0.6rem 1rem; }
+      .logo-kanji { font-size: 1.5rem; }
+      #word-grid { padding: 0 1rem 3rem; }
+      .modal { padding: 1.75rem 1.25rem; }
+      .modal-kanji { font-size: 3rem; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="logo">
+      <span class="logo-kanji">辞書</span>
+      <span class="logo-sub">Jisho-FR</span>
+    </div>
+    <div class="search-bar">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="search-input" placeholder="Chercher en japonais ou en français…" autocomplete="off" />
+    </div>
+    <span class="offline-badge" id="offline-badge">HORS LIGNE</span>
+  </div>
+  <div class="filters">
+    <div class="filters-inner">
+      <span class="filter-label">Niveau</span>
+      <button class="level-btn" data-level="all">Tous</button>
+      <button class="level-btn" data-level="N5">N5</button>
+      <button class="level-btn" data-level="N4">N4</button>
+      <button class="level-btn" data-level="N3">N3</button>
+      <button class="level-btn" data-level="N2">N2</button>
+      <button class="level-btn" data-level="N1">N1</button>
+      <span class="filter-label" style="margin-left:0.5rem;">Catégorie</span>
+      <select class="cat-select" id="cat-select">
+        <option value="all">Toutes</option>
+        <option value="nom">Noms</option>
+        <option value="verbe">Verbes</option>
+        <option value="adjectif">Adjectifs</option>
+        <option value="adverbe">Adverbes</option>
+        <option value="expression">Expressions</option>
+        <option value="favoris">⭐ Favoris</option>
+      </select>
+    </div>
+  </div>
+</header>
+
+<div class="stats-bar">
+  <div class="stats-count">
+    <span id="count">0</span> mots affichés
+  </div>
+  <div class="view-toggle">
+    <button class="view-btn active" id="grid-btn" title="Grille">⊞</button>
+    <button class="view-btn" id="list-btn" title="Liste">☰</button>
+  </div>
+</div>
+
+<div id="word-grid"></div>
+
+<!-- Modal -->
+<div id="modal-overlay">
+  <div class="modal" id="modal-box">
+    <button class="modal-close" id="modal-close">✕</button>
+    <div class="modal-kanji" id="m-kanji"></div>
+    <div class="modal-reading" id="m-reading"></div>
+    <div class="modal-romaji" id="m-romaji"></div>
+    <hr class="modal-divider" />
+    <div class="modal-label">Traduction</div>
+    <div class="modal-translation" id="m-translation"></div>
+    <div id="m-examples-wrap">
+      <div class="modal-label">Exemples</div>
+      <div id="m-examples"></div>
+    </div>
+    <div class="modal-meta" id="m-meta"></div>
+  </div>
+</div>
+
+<!-- Install banner -->
+<div id="install-banner">
+  <span>📲 Installer pour accès hors ligne</span>
+  <button id="install-btn">Installer</button>
+  <button id="install-dismiss">✕</button>
+</div>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
